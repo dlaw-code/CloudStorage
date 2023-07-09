@@ -6,9 +6,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CloudinaryDotNet" Version="1.21.0" />
 		<PackageReference Include="Duende.IdentityServer.EntityFramework" Version="6.3.0" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="6.0.0" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0" />
+
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="6.0.0" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.0" />
