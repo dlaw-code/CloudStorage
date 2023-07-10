@@ -1,4 +1,4 @@
-﻿using MCloudStorage.Data.Dtos;
+﻿using MCloudStorage.Data.Entities;
 
 namespace MCloudStorage.Data.Repository.RepositoryInterface
 {
