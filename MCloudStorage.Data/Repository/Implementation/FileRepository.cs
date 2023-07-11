@@ -1,5 +1,5 @@
 ﻿using MCloudStorage.API.Data;
-using MCloudStorage.Data.Dtos;
+using MCloudStorage.Data.Entities;
 using MCloudStorage.Data.Repository.RepositoryInterface;
 
 namespace MCloudStorage.Data.Repository.Implementation

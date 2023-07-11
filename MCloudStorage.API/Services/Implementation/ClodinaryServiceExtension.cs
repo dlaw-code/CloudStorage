@@ -1,7 +1,4 @@
-﻿using CloudinaryDotNet.Actions;
-using CloudinaryDotNet;
-using MCloudStorage.API.Services.ServicesInterface;
-using MCloudStorage.Data.Dtos;
+﻿using CloudinaryDotNet;
 
 namespace MCloudStorage.API.Services.Implementation
 {

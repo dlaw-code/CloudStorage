@@ -14,11 +14,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();                             
 builder.Services.AddSwaggerGen();
-//builder.Services.AddScoped<InterfaceName, ImplementationName>();
-builder.Services.AddScoped<IFileUploadService, FileUploadService>();
+builder.Services.AddScoped<IFileUploadService, LocalFileUploadService>();
 builder.Services.AddScoped<IFileRepository, FileRepository>();
-builder.Services.AddScoped<ICloudinaryUpload, CloudinaryUpload>();
-//builder.Services.AddScoped<ICloudinaryService, ClodinaryServiceExtension>();
 
 builder.Services.AddCloudinary(ClodinaryServiceExtension.GetAccount(config));
 

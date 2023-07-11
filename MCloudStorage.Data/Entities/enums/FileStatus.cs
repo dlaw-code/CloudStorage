@@ -1,4 +1,4 @@
-﻿namespace MCloudStorage.API.Entities.enums
+﻿namespace MCloudStorage.API.Entities.Enums
 {
     public enum FileStatus
     {
