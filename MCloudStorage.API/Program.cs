@@ -1,8 +1,6 @@
 using MCloudStorage.API.Data;
 using MCloudStorage.API.Services.Implementation;
 using MCloudStorage.API.Services.ServicesInterface;
-using MCloudStorage.Data.Repository.Implementation;
-using MCloudStorage.Data.Repository.RepositoryInterface;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,8 +12,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();                             
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IFileUploadService, LocalFileUploadService>();
-builder.Services.AddScoped<IFileRepository, FileRepository>();
+builder.Services.AddScoped<IFileUploadService, FileUploadService>();
+
 
 builder.Services.AddCloudinary(ClodinaryServiceExtension.GetAccount(config));
 

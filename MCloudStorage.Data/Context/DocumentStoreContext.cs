@@ -11,10 +11,17 @@ namespace MCloudStorage.API.Data
         }
 
         public DbSet<Document> Documents => Set<Document>();
+        public DbSet<SharedFile> SharedFiles => Set<SharedFile>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Document>()
+        .HasOne(d => d.SharedFile)
+        .WithOne(sf => sf.Document)
+        .HasForeignKey<SharedFile>(sf => sf.Id);
         }
     }
 }

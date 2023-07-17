@@ -3,6 +3,7 @@ using System;
 using MCloudStorage.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MCloudStorage.Data.Migrations
 {
     [DbContext(typeof(DocumentStoreContext))]
-    partial class DocumentStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20230717101547_InitialMigration")]
+    partial class InitialMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,6 +64,9 @@ namespace MCloudStorage.Data.Migrations
                     b.Property<string>("ParentLocation")
                         .HasColumnType("text");
 
+                    b.Property<int>("SharedFileDocumentId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SharedFileId")
                         .HasColumnType("integer");
 
@@ -71,15 +76,17 @@ namespace MCloudStorage.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SharedFileDocumentId");
+
                     b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("MCloudStorage.Data.Entities.SharedFile", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("DocumentId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("DocumentId")
+                    b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SharedAt")
@@ -89,26 +96,31 @@ namespace MCloudStorage.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("DocumentId");
 
                     b.ToTable("SharedFiles");
+                });
+
+            modelBuilder.Entity("MCloudStorage.Data.Entities.Document", b =>
+                {
+                    b.HasOne("MCloudStorage.Data.Entities.SharedFile", "SharedFile")
+                        .WithMany()
+                        .HasForeignKey("SharedFileDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SharedFile");
                 });
 
             modelBuilder.Entity("MCloudStorage.Data.Entities.SharedFile", b =>
                 {
                     b.HasOne("MCloudStorage.Data.Entities.Document", "Document")
-                        .WithOne("SharedFile")
-                        .HasForeignKey("MCloudStorage.Data.Entities.SharedFile", "Id")
+                        .WithOne()
+                        .HasForeignKey("MCloudStorage.Data.Entities.SharedFile", "DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Document");
-                });
-
-            modelBuilder.Entity("MCloudStorage.Data.Entities.Document", b =>
-                {
-                    b.Navigation("SharedFile")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

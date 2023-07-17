@@ -3,6 +3,7 @@ using System;
 using MCloudStorage.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MCloudStorage.Data.Migrations
 {
     [DbContext(typeof(DocumentStoreContext))]
-    partial class DocumentStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20230717103833_SharingMigratese")]
+    partial class SharingMigratese
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
