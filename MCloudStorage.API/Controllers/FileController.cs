@@ -20,8 +20,7 @@ namespace MCloudStorage.API.Controllers
         [HttpPost("upload")]
         public IActionResult Upload([FromForm] FileUploadData uploadData)
         {
-            string userId = uploadData.UserId;
-            var (FileRetrievalLink, FileRetrievalReference) = _fileUploadService.UploadDocument(uploadData);
+            var (FileRetrievalLink, FileRetrievalReference) = _fileUploadService.UploadLocalDocument(uploadData);
 
             return StatusCode((int)HttpStatusCode.Created, new
             {
@@ -30,16 +29,16 @@ namespace MCloudStorage.API.Controllers
             });
         }
 
-        [HttpPatch("cloudinaryUpload")]
-        public async Task<IActionResult> UpdateUserMediaAsync(string userId, List<IFormFile> mediaFiles)
+        [HttpPatch("UploadCloudinary")]
+        public async Task<IActionResult> UploadCloudinaryDocument([FromForm] FileUploadData uploadData)
         {
-            var result = await _fileUploadService.UpdateUserMediaAsync(userId, mediaFiles);
+            var (FileRetrievalLink, FileRetrievalReference) = await _fileUploadService.UploadCloudinaryDocument(uploadData);
 
-            return Ok(result);
-            //if (result.StartsWith("Failed"))
-            //{
-            //    return BadRequest(result);
-            //}
+            return StatusCode((int)HttpStatusCode.Created, new
+            {
+                FileRetrievalLink,
+                FileRetrievalReference
+            });
         }
 
         [HttpGet("{userId}")]
@@ -49,21 +48,28 @@ namespace MCloudStorage.API.Controllers
             return Ok(userUploads);
         }
 
-        
-        [HttpGet("user-summary/{userId}")]
+
+        [HttpGet("summary/{userId}")]
         public ActionResult<UserSummaryDto> GetUserSummary(string userId)
         {
             var userSummary = _fileUploadService.GetUserSummary(userId);
             return Ok(userSummary);
         }
 
-
-        [HttpGet("shared/{userId}")]
-        public ActionResult<UserUploadsResponseDto> GetSharedFiles(string userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpPost("share")]
+        public async Task<IActionResult> ShareFileWithUser(int fileId, string senderUserId, string receiverUserId)
         {
-            var sharedFiles = _fileUploadService.GetSharedFiles(userId);
-            return Ok(sharedFiles);
+            try
+            {
+                await _fileUploadService.ShareFileWithUser(fileId, senderUserId, receiverUserId);
+                return Ok("File shared successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message); // Return an appropriate error message to the client
+            }
         }
+
 
 
     }

@@ -11,7 +11,7 @@ namespace MCloudStorage.API.Services.ServicesInterface
         /// </summary>
         /// <param name="fileUploadData">The file upload details.</param>
         /// <returns>A tuple containing the file retrieval link and reference.</returns>
-        (string FileRetrievalLink, string FileRetrievalReference) UploadDocument(FileUploadData fileUploadData);
+        (string FileRetrievalLink, string FileRetrievalReference) UploadLocalDocument(FileUploadData fileUploadData);
 
         /// <summary>
         /// 
@@ -19,7 +19,7 @@ namespace MCloudStorage.API.Services.ServicesInterface
         /// <param name="userId"></param>
         /// <param name="mediaFiles"></param>
         /// <returns>This upload files to the cloudinary for retrieval purposes</returns>
-        Task<string> UpdateUserMediaAsync(string userId, List<IFormFile> mediaFiles);
+        Task<(string FileRetrievalLink, string FileRetrievalReference)> UploadCloudinaryDocument(FileUploadData fileUploadData);
 
         /// <summary>
         /// 
@@ -37,15 +37,12 @@ namespace MCloudStorage.API.Services.ServicesInterface
         /// <returns>This returns the user summary for dashboard purposes</returns>
         UserSummaryDto GetUserSummary(string userId);
 
-
-        UserUploadsResponseDto GetSharedFiles(string userId);
-
-
-
-
+        /// <summary>
+        /// This return the file shared by user
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        Task ShareFileWithUser(int fileId, string senderUserId, string receiverUserId);
+        
     }
-
-
-
-
 }

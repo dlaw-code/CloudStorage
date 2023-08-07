@@ -13,16 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();                             
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();
-
-
 builder.Services.AddCloudinary(ClodinaryServiceExtension.GetAccount(config));
-
- 
-
-
-//var connString = builder.Configuration.GetConnectionString("DocumentStorecontext");
-
-//builder.Services.AddSqlServer<DocumentStoreContext>(connString);
 
 builder.Services.AddDbContext<DocumentStoreContext>(options =>
 {

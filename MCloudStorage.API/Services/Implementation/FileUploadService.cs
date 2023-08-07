@@ -15,7 +15,7 @@ namespace MCloudStorage.API.Services.Implementation
         private const string FileUploadBasePath = "C:\\Files";
         private readonly DocumentStoreContext _dbContext;
         private readonly Cloudinary _cloudinary;
-        
+
         public FileUploadService(DocumentStoreContext dbContext, Cloudinary cloudinary)
         {
             _dbContext = dbContext;
@@ -23,7 +23,7 @@ namespace MCloudStorage.API.Services.Implementation
         }
 
         /// <inheritdoc />
-        public (string FileRetrievalLink, string FileRetrievalReference) UploadDocument(FileUploadData fileUploadData)
+        public (string FileRetrievalLink, string FileRetrievalReference) UploadLocalDocument(FileUploadData fileUploadData)
         {
             string uploadDirectory = TryCreateUploadFolder(fileUploadData.UserId, fileUploadData.ParentLocation);
             string uniqueFilename = GetUniqueFileNameWithExtension(fileUploadData.File);
@@ -31,8 +31,6 @@ namespace MCloudStorage.API.Services.Implementation
             string absoluteFilePath = Path.Combine(uploadDirectory, uniqueFilename);
 
             SaveFileToSpecifiedLocation(absoluteFilePath, fileUploadData.File);
-            
-
 
             var document = new Document
             {
@@ -43,30 +41,15 @@ namespace MCloudStorage.API.Services.Implementation
                 UserId = fileUploadData.UserId,
                 FileSize = fileUploadData.File.Length,
                 CreatedAt = DateTime.UtcNow,
-                LastUpdatedAt= DateTime.UtcNow,
+                LastUpdatedAt = DateTime.UtcNow,
                 FileType = fileUploadData.FileType,
                 FileStatus = FileStatus.Created // Set the appropriate file status here
-                
             };
 
             _dbContext.Documents.Add(document);
             _dbContext.SaveChanges();
 
-            var sharedFile = new SharedFile
-            {
-                //FileId = document.Id,
-                //Document = document,
-                Id = document.Id, // Set the Id property explicitly
-                DocumentId = document.Id, // Set the DocumentId foreign key property
-                UserId = fileUploadData.UserId,
-                SharedAt = DateTime.UtcNow
-            };
-
-            _dbContext.SharedFiles.Add(sharedFile);
-            _dbContext.SaveChanges();
-
             return (absoluteFilePath, uniqueFilename);
-            //_fileRepository.Add(document);
         }
 
         private static void SaveFileToSpecifiedLocation(string filePath, IFormFile file)
@@ -140,55 +123,47 @@ namespace MCloudStorage.API.Services.Implementation
         /// <param name="mediaFiles"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<string> UpdateUserMediaAsync(string userId, List<IFormFile> mediaFiles)
+        public async Task<(string FileRetrievalLink, string FileRetrievalReference)> UploadCloudinaryDocument(FileUploadData fileUploadData)
         {
-            if (mediaFiles == null || mediaFiles.Count == 0)
-            {
-                return "No media file";
-            }
+            var mediaFile = fileUploadData.File;
+            var uploadParams = new ImageUploadParams();
 
-            var document = await _dbContext.Documents.FirstOrDefaultAsync(c => c.UserId == userId);
-            if (document == null)
+            if (IsImageFile(mediaFile))
             {
-                return "Couldn't find user";
-            }
-
-            foreach (var mediaFile in mediaFiles)
-            {
-                var uploadParams = new ImageUploadParams();
-
-                if (IsImageFile(mediaFile))
+                uploadParams = new ImageUploadParams
                 {
-                    uploadParams = new ImageUploadParams
-                    {
-                        File = new FileDescription(mediaFile.FileName, mediaFile.OpenReadStream())
-                    };
-                }
-                else if (IsVideoFile(mediaFile))
-                {
-                    uploadParams = new VideoUploadParams
-                    {
-                        File = new FileDescription(mediaFile.FileName, mediaFile.OpenReadStream())
-                    };
-                }
-                else
-                {
-                    return "Invalid media file type";
-                }
-
-                var result = await _cloudinary.UploadAsync(uploadParams).ConfigureAwait(false);
-                document.Avatar += result.Url;
+                    File = new FileDescription(mediaFile.FileName, mediaFile.OpenReadStream())
+                };
             }
-
-            if (string.IsNullOrEmpty(document.Avatar))
+            else if (IsVideoFile(mediaFile))
             {
-                return "Failed to upload";
+                uploadParams = new VideoUploadParams
+                {
+                    File = new FileDescription(mediaFile.FileName, mediaFile.OpenReadStream())
+                };
             }
+            
 
-            _dbContext.Documents.Update(document);
-            await _dbContext.SaveChangesAsync();
+            var result = await _cloudinary.UploadAsync(uploadParams).ConfigureAwait(false);
 
-            return "Upload successful";
+            var document = new Document
+            {
+                FileName = fileUploadData.FileName,
+                FileReference = result.PublicId,
+                FileLink = result.Url.AbsolutePath,
+                ParentLocation = fileUploadData.ParentLocation,
+                UserId = fileUploadData.UserId,
+                FileSize = fileUploadData.File.Length,
+                CreatedAt = DateTime.UtcNow,
+                LastUpdatedAt = DateTime.UtcNow,
+                FileType = fileUploadData.FileType,
+                FileStatus = FileStatus.Created // Set the appropriate file status here
+            };
+
+            _dbContext.Documents.Add(document);
+            _dbContext.SaveChanges();
+
+            return (document.FileLink, document.FileReference);
         }
 
         private bool IsImageFile(IFormFile file)
@@ -237,7 +212,7 @@ namespace MCloudStorage.API.Services.Implementation
                 ParentLocation = document.ParentLocation,
                 UserId = document.UserId,
                 FileType = document.FileType,
-                
+
             }).ToList();
 
             // Create the paginated response DTO
@@ -272,31 +247,73 @@ namespace MCloudStorage.API.Services.Implementation
             return userSummary;
         }
 
-        public UserUploadsResponseDto GetSharedFiles(string userId)
+        public async Task ShareFileWithUser(int fileId, string senderUserId, string receiverUserId)
         {
-            var sharedFiles = _dbContext.SharedFiles
-                .Include(sf => sf.Document)
-                .Where(sf => sf.UserId == userId)
-                .OrderByDescending(sf => sf.SharedAt)
-                .ToList();
+            var sender = await _dbContext.Documents.FirstOrDefaultAsync(x => x.UserId == senderUserId);
 
-            var sharedFilesDto = sharedFiles.Select(sharedFile => new DocumentDto
+            if(sender == null )
             {
-                FileName = sharedFile.Document.FileName,
-                ParentLocation = sharedFile.Document.ParentLocation,
-                UserId = sharedFile.Document.UserId,
-                FileType = sharedFile.Document.FileType
-            }).ToList();
+                return;
+            }
 
-            var responseDto = new UserUploadsResponseDto
+            var receiver = await _dbContext.Documents.FirstOrDefaultAsync(x => x.UserId == receiverUserId);
+
+            if (receiver == null)
             {
-                UserUploads = sharedFilesDto,
-                TotalCount = sharedFilesDto.Count
+                throw new Exception("Receiver not found");
+            }
+
+
+
+
+            var file = await _dbContext.Documents.FindAsync(fileId);
+
+            //Check if file exists
+            if(file == null)
+            {
+                throw new Exception("File not found");
+            }
+
+            //Ensure the sender is the owner of the file
+            if(file.UserId != senderUserId)
+            {
+                throw new Exception("You can only share your own file");
+            }
+
+            var existingSharing = await _dbContext.SharedFiles
+        .FirstOrDefaultAsync(x => x.DocumentId == fileId && x.ReceiverUserId == receiverUserId);
+
+            if (existingSharing != null)
+            {
+                // File is already shared with the receiver, do not add a new entry
+                return;
+            }
+
+            var sharing = new SharedFile
+            {
+                DocumentId = file.Id,
+                //Document = file,
+                SenderUserId = senderUserId,
+                ReceiverUserId= receiverUserId,
+                SharedAt= DateTime.UtcNow,
             };
 
-            return responseDto;
+            
+            
+                //file.SharedFiles.Any();
+                file.IsShared = true;
+
+                _dbContext.SharedFiles.Add(sharing);
+                _dbContext.SaveChangesAsync();
+            
+            
+            }
+
+            
         }
 
+        
+
     }
-}
+
 

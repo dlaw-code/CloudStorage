@@ -1,6 +1,5 @@
 ﻿using MCloudStorage.API.Entities.Enums;
 using MCloudStorage.Data.Entities.Enums;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MCloudStorage.Data.Entities
 {
@@ -18,10 +17,9 @@ namespace MCloudStorage.Data.Entities
         public string Avatar { get; set; } = "";
         public FileType FileType { get; set; }
         public FileStatus FileStatus { get; set; }
-        [ForeignKey("SharedFileId")] // Foreign key attribute
-        public int SharedFileId { get; set; } // Foreign key property
-        public SharedFile SharedFile { get; set; }
-
+        public virtual SharedFile SharedFile { get; set; }
+        public bool IsShared { get; set; } // New property to indicate if the file is shared or not
+       
 
     }
 }
